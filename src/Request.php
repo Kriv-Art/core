@@ -21,16 +21,20 @@ use Longman\TelegramBot\Entities\Message;
 use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Exception\InvalidBotTokenException;
 use Longman\TelegramBot\Exception\TelegramException;
+use Throwable;
 
 /**
  * Class Request
  *
  * @method static ServerResponse getUpdates(array $data)                      Use this method to receive incoming updates using long polling (wiki). An Array of Update objects is returned.
  * @method static ServerResponse setWebhook(array $data)                      Use this method to specify a url and receive incoming updates via an outgoing webhook. Whenever there is an update for the bot, we will send an HTTPS POST request to the specified url, containing a JSON-serialized Update. In case of an unsuccessful request, we will give up after a reasonable amount of attempts. Returns true.
- * @method static ServerResponse deleteWebhook()                              Use this method to remove webhook integration if you decide to switch back to getUpdates. Returns True on success. Requires no parameters.
+ * @method static ServerResponse deleteWebhook(array $data)                   Use this method to remove webhook integration if you decide to switch back to getUpdates. Returns True on success.
  * @method static ServerResponse getWebhookInfo()                             Use this method to get current webhook status. Requires no parameters. On success, returns a WebhookInfo object. If the bot is using getUpdates, will return an object with the url field empty.
  * @method static ServerResponse getMe()                                      A simple method for testing your bot's auth token. Requires no parameters. Returns basic information about the bot in form of a User object.
+ * @method static ServerResponse logOut()                                     Use this method to log out from the cloud Bot API server before launching the bot locally. Requires no parameters. Returns True on success.
+ * @method static ServerResponse close()                                      Use this method to close the bot instance before moving it from one local server to another. Requires no parameters. Returns True on success.
  * @method static ServerResponse forwardMessage(array $data)                  Use this method to forward messages of any kind. On success, the sent Message is returned.
+ * @method static ServerResponse copyMessage(array $data)                     Use this method to copy messages of any kind. The method is analogous to the method forwardMessages, but the copied message doesn't have a link to the original message. Returns the MessageId of the sent message on success.
  * @method static ServerResponse sendPhoto(array $data)                       Use this method to send photos. On success, the sent Message is returned.
  * @method static ServerResponse sendAudio(array $data)                       Use this method to send audio files, if you want Telegram clients to display them in the music player. Your audio must be in the .mp3 format. On success, the sent Message is returned. Bots can currently send audio files of up to 50 MB in size, this limit may be changed in the future.
  * @method static ServerResponse sendDocument(array $data)                    Use this method to send general files. On success, the sent Message is returned. Bots can currently send files of any type of up to 50 MB in size, this limit may be changed in the future.
@@ -50,29 +54,34 @@ use Longman\TelegramBot\Exception\TelegramException;
  * @method static ServerResponse sendChatAction(array $data)                  Use this method when you need to tell the user that something is happening on the bot's side. The status is set for 5 seconds or less (when a message arrives from your bot, Telegram clients clear its typing status). Returns True on success.
  * @method static ServerResponse getUserProfilePhotos(array $data)            Use this method to get a list of profile pictures for a user. Returns a UserProfilePhotos object.
  * @method static ServerResponse getFile(array $data)                         Use this method to get basic info about a file and prepare it for downloading. For the moment, bots can download files of up to 20MB in size. On success, a File object is returned. The file can then be downloaded via the link https://api.telegram.org/file/bot<token>/<file_path>, where <file_path> is taken from the response. It is guaranteed that the link will be valid for at least 1 hour. When the link expires, a new one can be requested by calling getFile again.
- * @method static ServerResponse kickChatMember(array $data)                  Use this method to kick a user from a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the group on their own using invite links, etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
+ * @method static ServerResponse banChatMember(array $data)                   Use this method to kick a user from a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the group on their own using invite links, etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
  * @method static ServerResponse unbanChatMember(array $data)                 Use this method to unban a previously kicked user in a supergroup or channel. The user will not return to the group or channel automatically, but will be able to join via link, etc. The bot must be an administrator for this to work. Returns True on success.
  * @method static ServerResponse restrictChatMember(array $data)              Use this method to restrict a user in a supergroup. The bot must be an administrator in the supergroup for this to work and must have the appropriate admin rights. Pass True for all permissions to lift restrictions from a user. Returns True on success.
  * @method static ServerResponse promoteChatMember(array $data)               Use this method to promote or demote a user in a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Pass False for all boolean parameters to demote a user. Returns True on success.
  * @method static ServerResponse setChatAdministratorCustomTitle(array $data) Use this method to set a custom title for an administrator in a supergroup promoted by the bot. Returns True on success.
  * @method static ServerResponse setChatPermissions(array $data)              Use this method to set default chat permissions for all members. The bot must be an administrator in the group or a supergroup for this to work and must have the can_restrict_members admin rights. Returns True on success.
  * @method static ServerResponse exportChatInviteLink(array $data)            Use this method to generate a new invite link for a chat. Any previously generated link is revoked. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns the new invite link as String on success.
+ * @method static ServerResponse createChatInviteLink(array $data)            Use this method to create an additional invite link for a chat. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. The link can be revoked using the method revokeChatInviteLink. Returns the new invite link as ChatInviteLink object.
+ * @method static ServerResponse editChatInviteLink(array $data)              Use this method to edit a non-primary invite link created by the bot. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns the edited invite link as a ChatInviteLink object.
+ * @method static ServerResponse revokeChatInviteLink(array $data)            Use this method to revoke an invite link created by the bot. If the primary link is revoked, a new link is automatically generated. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns the revoked invite link as ChatInviteLink object.
  * @method static ServerResponse setChatPhoto(array $data)                    Use this method to set a new profile photo for the chat. Photos can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
  * @method static ServerResponse deleteChatPhoto(array $data)                 Use this method to delete a chat photo. Photos can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
  * @method static ServerResponse setChatTitle(array $data)                    Use this method to change the title of a chat. Titles can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
  * @method static ServerResponse setChatDescription(array $data)              Use this method to change the description of a group, a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
  * @method static ServerResponse pinChatMessage(array $data)                  Use this method to pin a message in a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the ‘can_pin_messages’ admin right in the supergroup or ‘can_edit_messages’ admin right in the channel. Returns True on success.
  * @method static ServerResponse unpinChatMessage(array $data)                Use this method to unpin a message in a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the ‘can_pin_messages’ admin right in the supergroup or ‘can_edit_messages’ admin right in the channel. Returns True on success.
+ * @method static ServerResponse unpinAllChatMessages(array $data)            Use this method to clear the list of pinned messages in a chat. If the chat is not a private chat, the bot must be an administrator in the chat for this to work and must have the 'can_pin_messages' admin right in a supergroup or 'can_edit_messages' admin right in a channel. Returns True on success.
  * @method static ServerResponse leaveChat(array $data)                       Use this method for your bot to leave a group, supergroup or channel. Returns True on success.
  * @method static ServerResponse getChat(array $data)                         Use this method to get up to date information about the chat (current name of the user for one-on-one conversations, current username of a user, group or channel, etc.). Returns a Chat object on success.
  * @method static ServerResponse getChatAdministrators(array $data)           Use this method to get a list of administrators in a chat. On success, returns an Array of ChatMember objects that contains information about all chat administrators except other bots. If the chat is a group or a supergroup and no administrators were appointed, only the creator will be returned.
- * @method static ServerResponse getChatMembersCount(array $data)             Use this method to get the number of members in a chat. Returns Int on success.
+ * @method static ServerResponse getChatMemberCount(array $data)              Use this method to get the number of members in a chat. Returns Int on success.
  * @method static ServerResponse getChatMember(array $data)                   Use this method to get information about a member of a chat. Returns a ChatMember object on success.
  * @method static ServerResponse setChatStickerSet(array $data)               Use this method to set a new group sticker set for a supergroup. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method. Returns True on success.
  * @method static ServerResponse deleteChatStickerSet(array $data)            Use this method to delete a group sticker set from a supergroup. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Use the field can_set_sticker_set optionally returned in getChat requests to check if the bot can use this method. Returns True on success.
  * @method static ServerResponse answerCallbackQuery(array $data)             Use this method to send answers to callback queries sent from inline keyboards. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert. On success, True is returned.
  * @method static ServerResponse answerInlineQuery(array $data)               Use this method to send answers to an inline query. On success, True is returned.
  * @method static ServerResponse setMyCommands(array $data)                   Use this method to change the list of the bot's commands. Returns True on success.
+ * @method static ServerResponse deleteMyCommands(array $data)                Use this method to delete the list of the bot's commands for the given scope and user language. After deletion, higher level commands will be shown to affected users. Returns True on success.
  * @method static ServerResponse getMyCommands()                              Use this method to get the current list of the bot's commands. Requires no parameters. Returns Array of BotCommand on success.
  * @method static ServerResponse editMessageText(array $data)                 Use this method to edit text and game messages sent by the bot or via the bot (for inline bots). On success, if edited message is sent by the bot, the edited Message is returned, otherwise True is returned.
  * @method static ServerResponse editMessageCaption(array $data)              Use this method to edit captions of messages sent by the bot or via the bot (for inline bots). On success, if edited message is sent by the bot, the edited Message is returned, otherwise True is returned.
@@ -112,6 +121,13 @@ class Request
     private static $api_base_uri = 'https://api.telegram.org';
 
     /**
+     * URI of the Telegram API for downloading files (relative to $api_base_url or absolute)
+     *
+     * @var string
+     */
+    private static $api_base_download_uri = '/file/bot{API_KEY}';
+
+    /**
      * Guzzle Client object
      *
      * @var ClientInterface
@@ -121,7 +137,7 @@ class Request
     /**
      * Request limiter
      *
-     * @var boolean
+     * @var bool
      */
     private static $limiter_enabled;
 
@@ -133,11 +149,11 @@ class Request
     private static $limiter_interval;
 
     /**
-     * Get the current action that is being executed
+     * The current action that is being executed
      *
      * @var string
      */
-    private static $current_action;
+    private static $current_action = '';
 
     /**
      * Available actions to send
@@ -154,8 +170,11 @@ class Request
         'deleteWebhook',
         'getWebhookInfo',
         'getMe',
+        'logOut',
+        'close',
         'sendMessage',
         'forwardMessage',
+        'copyMessage',
         'sendPhoto',
         'sendAudio',
         'sendDocument',
@@ -175,29 +194,34 @@ class Request
         'sendChatAction',
         'getUserProfilePhotos',
         'getFile',
-        'kickChatMember',
+        'banChatMember',
         'unbanChatMember',
         'restrictChatMember',
         'promoteChatMember',
         'setChatAdministratorCustomTitle',
         'setChatPermissions',
         'exportChatInviteLink',
+        'createChatInviteLink',
+        'editChatInviteLink',
+        'revokeChatInviteLink',
         'setChatPhoto',
         'deleteChatPhoto',
         'setChatTitle',
         'setChatDescription',
         'pinChatMessage',
         'unpinChatMessage',
+        'unpinAllChatMessages',
         'leaveChat',
         'getChat',
         'getChatAdministrators',
-        'getChatMembersCount',
+        'getChatMemberCount',
         'getChatMember',
         'setChatStickerSet',
         'deleteChatStickerSet',
         'answerCallbackQuery',
         'answerInlineQuery',
         'setMyCommands',
+        'deleteMyCommands',
         'getMyCommands',
         'editMessageText',
         'editMessageCaption',
@@ -232,6 +256,8 @@ class Request
         'deleteWebhook',
         'getWebhookInfo',
         'getMe',
+        'logOut',
+        'close',
         'getMyCommands',
     ];
 
@@ -265,7 +291,7 @@ class Request
      *
      * @param Telegram $telegram
      */
-    public static function initialize(Telegram $telegram)
+    public static function initialize(Telegram $telegram): void
     {
         self::$telegram = $telegram;
         self::setClient(self::$client ?: new Client(['base_uri' => self::$api_base_uri]));
@@ -276,33 +302,35 @@ class Request
      *
      * @param ClientInterface $client
      */
-    public static function setClient(ClientInterface $client)
+    public static function setClient(ClientInterface $client): void
     {
         self::$client = $client;
     }
 
     /**
-     * Set input from custom input or stdin and return it
+     * Set a custom Bot API URL
+     *
+     * @param string $api_base_uri
+     * @param string $api_base_download_uri
+     */
+    public static function setCustomBotApiUri(string $api_base_uri, string $api_base_download_uri = ''): void
+    {
+        self::$api_base_uri = $api_base_uri;
+        if ($api_base_download_uri !== '') {
+            self::$api_base_download_uri = $api_base_download_uri;
+        }
+    }
+
+    /**
+     * Get input from custom input or stdin and return it
      *
      * @return string
-     * @throws TelegramException
      */
-    public static function getInput()
+    public static function getInput(): string
     {
         // First check if a custom input has been set, else get the PHP input.
-        $input = self::$telegram->getCustomInput();
-        if (empty($input)) {
-            $input = file_get_contents('php://input');
-        }
-
-        // Make sure we have a string to work with.
-        if (!is_string($input)) {
-            throw new TelegramException('Input must be a string!');
-        }
-
-        TelegramLog::update($input);
-
-        return $input;
+        return self::$telegram->getCustomInput()
+            ?: file_get_contents('php://input');
     }
 
     /**
@@ -312,7 +340,7 @@ class Request
      *
      * @return array Fake response data
      */
-    public static function generateGeneralFakeServerResponse(array $data = [])
+    public static function generateGeneralFakeServerResponse(array $data = []): array
     {
         //PARAM BINDED IN PHPUNIT TEST FOR TestServerResponse.php
         //Maybe this is not the best possible implementation
@@ -326,7 +354,7 @@ class Request
             $fake_response['result'] = true;
         }
 
-        //some data to let iniatilize the class method SendMessage
+        //some data to initialize the class method SendMessage
         if (isset($data['chat_id'])) {
             $data['message_id'] = '1234';
             $data['date']       = '1441378360';
@@ -354,7 +382,7 @@ class Request
      * @return array
      * @throws TelegramException
      */
-    private static function setUpRequestParams(array $data)
+    private static function setUpRequestParams(array $data): array
     {
         $has_resource = false;
         $multipart    = [];
@@ -421,11 +449,12 @@ class Request
      * @return mixed
      * @throws TelegramException
      */
-    private static function mediaInputHelper($item, &$has_resource, array &$multipart)
+    private static function mediaInputHelper($item, bool &$has_resource, array &$multipart)
     {
         $was_array = is_array($item);
         $was_array || $item = [$item];
 
+        /** @var InputMedia|null $media_item */
         foreach ($item as $media_item) {
             if (!($media_item instanceof InputMedia)) {
                 continue;
@@ -439,7 +468,7 @@ class Request
 
             foreach ($possible_medias as $type => $media) {
                 // Allow absolute paths to local files.
-                if (is_string($media) && file_exists($media)) {
+                if (is_string($media) && strpos($media, 'attach://') !== 0 && file_exists($media)) {
                     $media = new Stream(self::encodeFile($media));
                 }
 
@@ -465,7 +494,7 @@ class Request
      *
      * @return string
      */
-    public static function getCurrentAction()
+    public static function getCurrentAction(): string
     {
         return self::$current_action;
     }
@@ -479,10 +508,8 @@ class Request
      * @return string Result of the HTTP Request
      * @throws TelegramException
      */
-    public static function execute($action, array $data = [])
+    public static function execute(string $action, array $data = []): string
     {
-        $result                  = null;
-        $response                = null;
         $request_params          = self::setUpRequestParams($data);
         $request_params['debug'] = TelegramLog::getDebugLogTempStream();
 
@@ -492,21 +519,16 @@ class Request
                 $request_params
             );
             $result   = (string) $response->getBody();
-
-            //Logging getUpdates Update
-            if ($action === 'getUpdates') {
-                TelegramLog::update($result);
-            }
         } catch (RequestException $e) {
             $response = null;
             $result   = $e->getResponse() ? (string) $e->getResponse()->getBody() : '';
-        } finally {
-            //Logging verbose debug output
-            if (TelegramLog::$always_log_request_and_response || $response === null) {
-                TelegramLog::debug('Request data:' . PHP_EOL . print_r($data, true));
-                TelegramLog::debug('Response data:' . PHP_EOL . $result);
-                TelegramLog::endDebugLogTempStream('Verbose HTTP Request output:' . PHP_EOL . '%s' . PHP_EOL);
-            }
+        }
+
+        //Logging verbose debug output
+        if (TelegramLog::$always_log_request_and_response || $response === null) {
+            TelegramLog::debug('Request data:' . PHP_EOL . print_r($data, true));
+            TelegramLog::debug('Response data:' . PHP_EOL . $result);
+            TelegramLog::endDebugLogTempStream('Verbose HTTP Request output:' . PHP_EOL . '%s' . PHP_EOL);
         }
 
         return $result;
@@ -517,10 +539,10 @@ class Request
      *
      * @param File $file
      *
-     * @return boolean
+     * @return bool
      * @throws TelegramException
      */
-    public static function downloadFile(File $file)
+    public static function downloadFile(File $file): bool
     {
         if (empty($download_path = self::$telegram->getDownloadPath())) {
             throw new TelegramException('Download path not set!');
@@ -539,13 +561,14 @@ class Request
         $debug_handle = TelegramLog::getDebugLogTempStream();
 
         try {
+            $base_download_uri = str_replace('{API_KEY}', self::$telegram->getApiKey(), self::$api_base_download_uri);
             self::$client->get(
-                '/file/bot' . self::$telegram->getApiKey() . '/' . $tg_file_path,
+                "{$base_download_uri}/{$tg_file_path}",
                 ['debug' => $debug_handle, 'sink' => $file_path]
             );
 
             return filesize($file_path) > 0;
-        } catch (RequestException $e) {
+        } catch (Throwable $e) {
             return false;
         } finally {
             //Logging verbose debug output
@@ -561,7 +584,7 @@ class Request
      * @return resource
      * @throws TelegramException
      */
-    public static function encodeFile($file)
+    public static function encodeFile(string $file)
     {
         $fp = fopen($file, 'rb');
         if ($fp === false) {
@@ -583,7 +606,7 @@ class Request
      * @return ServerResponse
      * @throws TelegramException
      */
-    public static function send($action, array $data = [])
+    public static function send(string $action, array $data = []): ServerResponse
     {
         self::ensureValidAction($action);
         self::addDummyParamIfNecessary($action, $data);
@@ -624,7 +647,7 @@ class Request
         }
 
         // Reset current action after completion.
-        self::$current_action = null;
+        self::$current_action = '';
 
         return $response;
     }
@@ -642,9 +665,9 @@ class Request
      * @param string $action
      * @param array  $data
      */
-    protected static function addDummyParamIfNecessary($action, array &$data)
+    protected static function addDummyParamIfNecessary(string $action, array &$data): void
     {
-        if (in_array($action, self::$actions_need_dummy_param, true)) {
+        if (empty($data) && in_array($action, self::$actions_need_dummy_param, true)) {
             // Can be anything, using a single letter to minimise request size.
             $data = ['d'];
         }
@@ -657,7 +680,7 @@ class Request
      *
      * @throws TelegramException
      */
-    private static function ensureNonEmptyData(array $data)
+    private static function ensureNonEmptyData(array $data): void
     {
         if (count($data) === 0) {
             throw new TelegramException('Data is empty!');
@@ -671,7 +694,7 @@ class Request
      *
      * @throws TelegramException
      */
-    private static function ensureValidAction($action)
+    private static function ensureValidAction(string $action): void
     {
         if (!in_array($action, self::$actions, true)) {
             throw new TelegramException('The action "' . $action . '" doesn\'t exist!');
@@ -679,29 +702,50 @@ class Request
     }
 
     /**
-     * Use this method to send text messages. On success, the sent Message is returned
+     * Use this method to send text messages. On success, the last sent Message is returned
+     *
+     * All message responses are saved in `$extras['responses']`.
+     * Custom encoding can be defined in `$extras['encoding']` (default: `mb_internal_encoding()`)
+     * Custom splitting can be defined in `$extras['split']` (default: 4096)
+     *     `$extras['split'] = null;` // force to not split message at all!
+     *     `$extras['split'] = 200;`  // split message into 200 character chunks
      *
      * @link https://core.telegram.org/bots/api#sendmessage
      *
-     * @param array $data
+     * @todo Splitting formatted text may break the message.
+     *
+     * @param array      $data
+     * @param array|null $extras
      *
      * @return ServerResponse
      * @throws TelegramException
      */
-    public static function sendMessage(array $data)
+    public static function sendMessage(array $data, ?array &$extras = []): ServerResponse
     {
-        $text = $data['text'];
+        $extras = array_merge([
+            'split'    => 4096,
+            'encoding' => mb_internal_encoding(),
+        ], (array) $extras);
+
+        $text       = $data['text'];
+        $encoding   = $extras['encoding'];
+        $max_length = $extras['split'] ?: mb_strlen($text, $encoding);
+
+        $responses = [];
 
         do {
-            //Chop off and send the first message
-            $data['text'] = mb_substr($text, 0, 4096);
-            $response     = self::send('sendMessage', $data);
+            // Chop off and send the first message.
+            $data['text'] = mb_substr($text, 0, $max_length, $encoding);
+            $responses[]  = self::send('sendMessage', $data);
 
-            //Prepare the next message
-            $text = mb_substr($text, 4096);
-        } while (mb_strlen($text, 'UTF-8') > 0);
+            // Prepare the next message.
+            $text = mb_substr($text, $max_length, null, $encoding);
+        } while ($text !== '');
 
-        return $response;
+        // Add all response objects to referenced variable.
+        $extras['responses'] = $responses;
+
+        return end($responses);
     }
 
     /**
@@ -711,27 +755,25 @@ class Request
      * @param array  $data
      *
      * @return ServerResponse
+     * @throws TelegramException
      */
-    public static function __callStatic($action, array $data)
+    public static function __callStatic(string $action, array $data): ServerResponse
     {
-        // Make sure to add the action being called as the first parameter to be passed.
-        array_unshift($data, $action);
-
-        // @todo Use splat operator for unpacking when we move to PHP 5.6+
-        return call_user_func_array('static::send', $data);
+        // Only argument should be the data array, ignore any others.
+        return static::send($action, reset($data) ?: []);
     }
 
     /**
      * Return an empty Server Response
      *
-     * No request to telegram are sent, this function is used in commands that
-     * don't need to fire a message after execution
+     * No request is sent to Telegram.
+     * This function is used in commands that don't need to fire a message after execution
      *
      * @return ServerResponse
      */
-    public static function emptyResponse()
+    public static function emptyResponse(): ServerResponse
     {
-        return new ServerResponse(['ok' => true, 'result' => true], null);
+        return new ServerResponse(['ok' => true, 'result' => true]);
     }
 
     /**
@@ -745,10 +787,10 @@ class Request
      * @throws TelegramException
      */
     public static function sendToActiveChats(
-        $callback_function,
+        string $callback_function,
         array $data,
         array $select_chats_params
-    ) {
+    ): array {
         self::ensureValidAction($callback_function);
 
         $chats = DB::selectChats($select_chats_params);
@@ -767,12 +809,12 @@ class Request
     /**
      * Enable request limiter
      *
-     * @param boolean $enable
-     * @param array   $options
+     * @param bool  $enable
+     * @param array $options
      *
      * @throws TelegramException
      */
-    public static function setLimiter($enable = true, array $options = [])
+    public static function setLimiter(bool $enable = true, array $options = []): void
     {
         if (DB::isDbConnected()) {
             $options_default = [
@@ -801,12 +843,13 @@ class Request
      *
      * @throws TelegramException
      */
-    private static function limitTelegramRequests($action, array $data = [])
+    private static function limitTelegramRequests(string $action, array $data = []): void
     {
         if (self::$limiter_enabled) {
             $limited_methods = [
                 'sendMessage',
                 'forwardMessage',
+                'copyMessage',
                 'sendPhoto',
                 'sendAudio',
                 'sendDocument',
@@ -827,6 +870,7 @@ class Request
                 'sendGame',
                 'setGameScore',
                 'setMyCommands',
+                'deleteMyCommands',
                 'editMessageText',
                 'editMessageCaption',
                 'editMessageMedia',
@@ -839,8 +883,8 @@ class Request
                 'setPassportDataErrors',
             ];
 
-            $chat_id           = isset($data['chat_id']) ? $data['chat_id'] : null;
-            $inline_message_id = isset($data['inline_message_id']) ? $data['inline_message_id'] : null;
+            $chat_id           = $data['chat_id'] ?? null;
+            $inline_message_id = $data['inline_message_id'] ?? null;
 
             if (($chat_id || $inline_message_id) && in_array($action, $limited_methods, true)) {
                 $timeout = 60;
@@ -872,5 +916,33 @@ class Request
                 DB::insertTelegramRequest($action, $data);
             }
         }
+    }
+
+    /**
+     * Use this method to kick a user from a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the group on their own using invite links, etc., unless unbanned first. The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
+     *
+     * @deprecated
+     * @see Request::banChatMember()
+     *
+     * @param  array  $data
+     * @return ServerResponse
+     */
+    public static function kickChatMember(array $data = []): ServerResponse
+    {
+        return static::banChatMember($data);
+    }
+
+    /**
+     * Use this method to get the number of members in a chat. Returns Int on success.
+     *
+     * @deprecated
+     * @see Request::getChatMemberCount()
+     *
+     * @param  array  $data
+     * @return ServerResponse
+     */
+    public static function getChatMembersCount(array $data = []): ServerResponse
+    {
+        return static::getChatMemberCount($data);
     }
 }

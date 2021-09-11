@@ -25,6 +25,7 @@ namespace Longman\TelegramBot\Entities;
  * @method string          getFirstName()                   Optional. First name of the other party in a private chat
  * @method string          getLastName()                    Optional. Last name of the other party in a private chat
  * @method ChatPhoto       getPhoto()                       Optional. Chat photo. Returned only in getChat.
+ * @method string          getBio()                         Optional. Bio of the other party in a private chat. Returned only in getChat.
  * @method string          getDescription()                 Optional. Description, for groups, supergroups and channel chats. Returned only in getChat.
  * @method string          getInviteLink()                  Optional. Chat invite link, for groups, supergroups and channel chats. Each administrator in a chat generates their own invite links, so the bot must first generate the link using exportChatInviteLink. Returned only in getChat.
  * @method Message         getPinnedMessage()               Optional. Pinned message, for groups, supergroups and channels. Returned only in getChat.
@@ -32,18 +33,21 @@ namespace Longman\TelegramBot\Entities;
  * @method int             getSlowModeDelay()               Optional. For supergroups, the minimum allowed delay between consecutive messages sent by each unpriviledged user. Returned only in getChat.
  * @method string          getStickerSetName()              Optional. For supergroups, name of group sticker set. Returned only in getChat.
  * @method bool            getCanSetStickerSet()            Optional. True, if the bot can change the group sticker set. Returned only in getChat.
+ * @method int             getLinkedChatId()                Optional. Unique identifier for the linked chat. Returned only in getChat.
+ * @method ChatLocation    getLocation()                    Optional. For supergroups, the location to which the supergroup is connected. Returned only in getChat.
  */
 class Chat extends Entity
 {
     /**
      * {@inheritdoc}
      */
-    protected function subEntities()
+    protected function subEntities(): array
     {
         return [
             'photo'          => ChatPhoto::class,
             'pinned_message' => Message::class,
             'permissions'    => ChatPermissions::class,
+            'location'       => ChatLocation::class,
         ];
     }
 
@@ -64,9 +68,9 @@ class Chat extends Entity
      *
      * @param bool $escape_markdown
      *
-     * @return string|null
+     * @return string
      */
-    public function tryMention($escape_markdown = false)
+    public function tryMention($escape_markdown = false): string
     {
         if ($this->isPrivateChat()) {
             return parent::tryMention($escape_markdown);
@@ -80,7 +84,7 @@ class Chat extends Entity
      *
      * @return bool
      */
-    public function isGroupChat()
+    public function isGroupChat(): bool
     {
         return $this->getType() === 'group' || $this->getId() < 0;
     }
@@ -90,7 +94,7 @@ class Chat extends Entity
      *
      * @return bool
      */
-    public function isPrivateChat()
+    public function isPrivateChat(): bool
     {
         return $this->getType() === 'private';
     }
@@ -100,7 +104,7 @@ class Chat extends Entity
      *
      * @return bool
      */
-    public function isSuperGroup()
+    public function isSuperGroup(): bool
     {
         return $this->getType() === 'supergroup';
     }
@@ -110,7 +114,7 @@ class Chat extends Entity
      *
      * @return bool
      */
-    public function isChannel()
+    public function isChannel(): bool
     {
         return $this->getType() === 'channel';
     }
@@ -121,9 +125,9 @@ class Chat extends Entity
      * @deprecated
      * @see Chat::getPermissions()
      *
-     * @return bool
+     * @return bool|null
      */
-    public function getAllMembersAreAdministrators()
+    public function getAllMembersAreAdministrators(): ?bool
     {
         return $this->getProperty('all_members_are_administrators');
     }

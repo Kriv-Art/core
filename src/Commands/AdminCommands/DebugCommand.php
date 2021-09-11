@@ -11,8 +11,10 @@
 
 namespace Longman\TelegramBot\Commands\AdminCommands;
 
+use Exception;
 use Longman\TelegramBot\Commands\AdminCommand;
 use Longman\TelegramBot\DB;
+use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Exception\TelegramException;
 use Longman\TelegramBot\Request;
 
@@ -47,7 +49,7 @@ class DebugCommand extends AdminCommand
      * @return mixed
      * @throws TelegramException
      */
-    public function execute()
+    public function execute(): ServerResponse
     {
         $pdo     = DB::getPdo();
         $message = $this->getMessage();
@@ -113,7 +115,7 @@ class DebugCommand extends AdminCommand
                     $webhook_info_result_str
                 );
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $debug_info[] = $webhook_info_title . sprintf(' `Failed to get webhook info! (%s)`', $e->getMessage());
         }
 

@@ -9,6 +9,8 @@
 
 namespace Longman\TelegramBot\Entities;
 
+use Longman\TelegramBot\Entities\ChatMember\ChatMember;
+use Longman\TelegramBot\Entities\ChatMember\Factory as ChatMemberFactory;
 use Longman\TelegramBot\Entities\Games\GameHighScore;
 use Longman\TelegramBot\Request;
 
@@ -32,14 +34,14 @@ class ServerResponse extends Entity
      * @param array  $data
      * @param string $bot_username
      */
-    public function __construct(array $data, $bot_username)
+    public function __construct(array $data, string $bot_username = '')
     {
         // Make sure we don't double-save the raw_data
         unset($data['raw_data']);
         $data['raw_data'] = $data;
 
-        $is_ok  = isset($data['ok']) ? (bool) $data['ok'] : false;
-        $result = isset($data['result']) ? $data['result'] : null;
+        $is_ok  = (bool) ($data['ok'] ?? false);
+        $result = $data['result'] ?? null;
 
         if ($is_ok && is_array($result)) {
             if ($this->isAssoc($result)) {
@@ -61,7 +63,7 @@ class ServerResponse extends Entity
      *
      * @return bool
      */
-    protected function isAssoc(array $array)
+    protected function isAssoc(array $array): bool
     {
         return count(array_filter(array_keys($array), 'is_string')) > 0;
     }
@@ -71,7 +73,7 @@ class ServerResponse extends Entity
      *
      * @return bool
      */
-    public function isOk()
+    public function isOk(): bool
     {
         return (bool) $this->getOk();
     }
@@ -106,16 +108,11 @@ class ServerResponse extends Entity
      *
      * @return Chat|ChatMember|File|Message|User|UserProfilePhotos|WebhookInfo
      */
-    private function createResultObject(array $result, $bot_username)
+    private function createResultObject(array $result, string $bot_username): Entity
     {
-        $action = Request::getCurrentAction();
-
-        // We don't need to save the raw_data of the response object!
-        $result['raw_data'] = null;
-
         $result_object_types = [
             'getChat'              => Chat::class,
-            'getChatMember'        => ChatMember::class,
+            'getChatMember'        => ChatMemberFactory::class,
             'getFile'              => File::class,
             'getMe'                => User::class,
             'getStickerSet'        => StickerSet::class,
@@ -123,40 +120,44 @@ class ServerResponse extends Entity
             'getWebhookInfo'       => WebhookInfo::class,
         ];
 
-        $object_class = array_key_exists($action, $result_object_types) ? $result_object_types[$action] : Message::class;
+        $action       = Request::getCurrentAction();
+        $object_class = $result_object_types[$action] ?? Message::class;
 
-        return new $object_class($result, $bot_username);
+        // We don't need to save the raw_data of the response object!
+        $result['raw_data'] = null;
+
+        return Factory::resolveEntityClass($object_class, $result, $bot_username);
     }
 
     /**
      * Create and return the objects array of the received result
      *
-     * @param array  $result
+     * @param array  $results
      * @param string $bot_username
      *
      * @return BotCommand[]|ChatMember[]|GameHighScore[]|Message[]|Update[]
      */
-    private function createResultObjects(array $result, $bot_username)
+    private function createResultObjects(array $results, string $bot_username): array
     {
-        $results = [];
-        $action  = Request::getCurrentAction();
-
         $result_object_types = [
             'getMyCommands'         => BotCommand::class,
-            'getChatAdministrators' => ChatMember::class,
+            'getChatAdministrators' => ChatMemberFactory::class,
             'getGameHighScores'     => GameHighScore::class,
             'sendMediaGroup'        => Message::class,
         ];
 
-        $object_class = array_key_exists($action, $result_object_types) ? $result_object_types[$action] : Update::class;
+        $action       = Request::getCurrentAction();
+        $object_class = $result_object_types[$action] ?? Update::class;
 
-        foreach ($result as $data) {
+        $objects = [];
+
+        foreach ($results as $result) {
             // We don't need to save the raw_data of the response object!
-            $data['raw_data'] = null;
+            $result['raw_data'] = null;
 
-            $results[] = new $object_class($data, $bot_username);
+            $objects[] = Factory::resolveEntityClass($object_class, $result, $bot_username);
         }
 
-        return $results;
+        return $objects;
     }
 }

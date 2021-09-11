@@ -108,7 +108,7 @@ class CleanupCommand extends AdminCommand
      *
      * @return array
      */
-    private function getSettings($custom_time = '')
+    private function getSettings($custom_time = ''): array
     {
         $tables_to_clean      = self::$default_tables_to_clean;
         $user_tables_to_clean = $this->getConfig('tables_to_clean');
@@ -143,7 +143,7 @@ class CleanupCommand extends AdminCommand
      * @return array
      * @throws TelegramException
      */
-    private function getQueries($settings)
+    private function getQueries($settings): array
     {
         if (empty($settings) || !is_array($settings)) {
             throw new TelegramException('Settings variable is not an array or is empty!');
@@ -161,53 +161,58 @@ class CleanupCommand extends AdminCommand
         if (in_array('telegram_update', $tables_to_clean, true)) {
             $queries[] = sprintf(
                 'DELETE FROM `%3$s`
-                WHERE `id` != \'%1$s\'
-                  AND `chat_id` NOT IN (
-                    SELECT `id`
-                    FROM `%4$s`
-                    WHERE `%3$s`.`chat_id` = `id`
-                    AND `updated_at` < \'%2$s\'
-                  )
-                  AND (
-                    `message_id` IS NOT NULL
-                    AND `message_id` IN (
-                      SELECT `id`
-                      FROM `%5$s`
-                      WHERE `date` < \'%2$s\'
-                    )
-                  )
-                  OR (
-                    `edited_message_id` IS NOT NULL
-                    AND `edited_message_id` IN (
-                      SELECT `id`
-                      FROM `%6$s`
-                      WHERE `edit_date` < \'%2$s\'
-                    )
-                  )
-                  OR (
-                    `inline_query_id` IS NOT NULL
-                    AND `inline_query_id` IN (
-                      SELECT `id`
-                      FROM `%7$s`
-                      WHERE `created_at` < \'%2$s\'
-                    )
-                  )
-                  OR (
-                    `chosen_inline_result_id` IS NOT NULL
-                    AND `chosen_inline_result_id` IN (
-                      SELECT `id`
-                      FROM `%8$s`
-                      WHERE `created_at` < \'%2$s\'
-                    )
-                  )
-                  OR (
-                    `callback_query_id` IS NOT NULL
-                    AND `callback_query_id` IN (
-                      SELECT `id`
-                      FROM `%9$s`
-                      WHERE `created_at` < \'%2$s\'
-                    )
-                  )
+                WHERE id IN (
+                    SELECT id FROM (
+                        SELECT id FROM `%3$s`
+                        WHERE `id` != \'%1$s\'
+                        AND `chat_id` NOT IN (
+                          SELECT `id`
+                          FROM `%4$s`
+                          WHERE `%3$s`.`chat_id` = `id`
+                          AND `updated_at` < \'%2$s\'
+                        )
+                        AND (
+                          `message_id` IS NOT NULL
+                          AND `message_id` IN (
+                            SELECT `id`
+                            FROM `%5$s`
+                            WHERE `date` < \'%2$s\'
+                          )
+                        )
+                        OR (
+                          `edited_message_id` IS NOT NULL
+                          AND `edited_message_id` IN (
+                            SELECT `id`
+                            FROM `%6$s`
+                            WHERE `edit_date` < \'%2$s\'
+                          )
+                        )
+                        OR (
+                          `inline_query_id` IS NOT NULL
+                          AND `inline_query_id` IN (
+                            SELECT `id`
+                            FROM `%7$s`
+                            WHERE `created_at` < \'%2$s\'
+                          )
+                        )
+                        OR (
+                          `chosen_inline_result_id` IS NOT NULL
+                          AND `chosen_inline_result_id` IN (
+                            SELECT `id`
+                            FROM `%8$s`
+                            WHERE `created_at` < \'%2$s\'
+                          )
+                        )
+                        OR (
+                          `callback_query_id` IS NOT NULL
+                          AND `callback_query_id` IN (
+                            SELECT `id`
+                            FROM `%9$s`
+                            WHERE `created_at` < \'%2$s\'
+                          )
+                        )
+                    ) a
+                )
             ',
                 $this->getUpdate()->getUpdateId(),
                 $clean_older_than['telegram_update'],
@@ -347,7 +352,7 @@ class CleanupCommand extends AdminCommand
      * @return ServerResponse
      * @throws TelegramException
      */
-    public function executeNoDb()
+    public function executeNoDb(): ServerResponse
     {
         return $this->replyToChat('*No database connection!*', ['parse_mode' => 'Markdown']);
     }
@@ -358,7 +363,7 @@ class CleanupCommand extends AdminCommand
      * @return ServerResponse
      * @throws TelegramException
      */
-    public function execute()
+    public function execute(): ServerResponse
     {
         $message = $this->getMessage();
         $text    = $message->getText(true);

@@ -31,27 +31,55 @@ use Longman\TelegramBot\Entities\Payments\ShippingQuery;
  * @method PreCheckoutQuery    getPreCheckoutQuery()   Optional. New incoming pre-checkout query. Contains full information about checkout
  * @method Poll                getPoll()               Optional. New poll state. Bots receive only updates about polls, which are sent or stopped by the bot
  * @method PollAnswer          getPollAnswer()         Optional. A user changed their answer in a non-anonymous poll. Bots receive new votes only in polls that were sent by the bot itself.
+ * @method ChatMemberUpdated   getMyChatMember()       Optional. The bot's chat member status was updated in a chat. For private chats, this update is received only when the bot is blocked or unblocked by the user.
+ * @method ChatMemberUpdated   getChatMember()         Optional. A chat member's status was updated in a chat. The bot must be an administrator in the chat and must explicitly specify “chat_member” in the list of allowed_updates to receive these updates.
  */
 class Update extends Entity
 {
+    public const TYPE_MESSAGE              = 'message';
+    public const TYPE_EDITED_MESSAGE       = 'edited_message';
+    public const TYPE_CHANNEL_POST         = 'channel_post';
+    public const TYPE_EDITED_CHANNEL_POST  = 'edited_channel_post';
+    public const TYPE_INLINE_QUERY         = 'inline_query';
+    public const TYPE_CHOSEN_INLINE_RESULT = 'chosen_inline_result';
+    public const TYPE_CALLBACK_QUERY       = 'callback_query';
+    public const TYPE_SHIPPING_QUERY       = 'shipping_query';
+    public const TYPE_PRE_CHECKOUT_QUERY   = 'pre_checkout_query';
+    public const TYPE_POLL                 = 'poll';
+    public const TYPE_POLL_ANSWER          = 'poll_answer';
+    public const TYPE_MY_CHAT_MEMBER       = 'my_chat_member';
+    public const TYPE_CHAT_MEMBER          = 'chat_member';
+
     /**
      * {@inheritdoc}
      */
-    protected function subEntities()
+    protected function subEntities(): array
     {
         return [
-            'message'              => Message::class,
-            'edited_message'       => EditedMessage::class,
-            'channel_post'         => ChannelPost::class,
-            'edited_channel_post'  => EditedChannelPost::class,
-            'inline_query'         => InlineQuery::class,
-            'chosen_inline_result' => ChosenInlineResult::class,
-            'callback_query'       => CallbackQuery::class,
-            'shipping_query'       => ShippingQuery::class,
-            'pre_checkout_query'   => PreCheckoutQuery::class,
-            'poll'                 => Poll::class,
-            'poll_answer'          => PollAnswer::class,
+            self::TYPE_MESSAGE              => Message::class,
+            self::TYPE_EDITED_MESSAGE       => EditedMessage::class,
+            self::TYPE_CHANNEL_POST         => ChannelPost::class,
+            self::TYPE_EDITED_CHANNEL_POST  => EditedChannelPost::class,
+            self::TYPE_INLINE_QUERY         => InlineQuery::class,
+            self::TYPE_CHOSEN_INLINE_RESULT => ChosenInlineResult::class,
+            self::TYPE_CALLBACK_QUERY       => CallbackQuery::class,
+            self::TYPE_SHIPPING_QUERY       => ShippingQuery::class,
+            self::TYPE_PRE_CHECKOUT_QUERY   => PreCheckoutQuery::class,
+            self::TYPE_POLL                 => Poll::class,
+            self::TYPE_POLL_ANSWER          => PollAnswer::class,
+            self::TYPE_MY_CHAT_MEMBER       => ChatMemberUpdated::class,
+            self::TYPE_CHAT_MEMBER          => ChatMemberUpdated::class,
         ];
+    }
+
+    /**
+     * Get the list of all available update types
+     *
+     * @return string[]
+     */
+    public static function getUpdateTypes(): array
+    {
+        return array_keys((new self([]))->subEntities());
     }
 
     /**
@@ -59,10 +87,9 @@ class Update extends Entity
      *
      * @return string|null
      */
-    public function getUpdateType()
+    public function getUpdateType(): ?string
     {
-        $types = array_keys($this->subEntities());
-        foreach ($types as $type) {
+        foreach (self::getUpdateTypes() as $type) {
             if ($this->getProperty($type)) {
                 return $type;
             }
@@ -74,7 +101,7 @@ class Update extends Entity
     /**
      * Get update content
      *
-     * @return CallbackQuery|ChosenInlineResult|InlineQuery|Message
+     * @return CallbackQuery|ChatMemberUpdated|ChosenInlineResult|InlineQuery|Message|PollAnswer|Poll|PreCheckoutQuery|ShippingQuery
      */
     public function getUpdateContent()
     {

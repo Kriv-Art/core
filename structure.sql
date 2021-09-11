@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS `inline_query` (
   `location` CHAR(255) NULL DEFAULT NULL COMMENT 'Location of the user',
   `query` TEXT NOT NULL COMMENT 'Text of the query',
   `offset` CHAR(255) NULL DEFAULT NULL COMMENT 'Offset of the result',
+  `chat_type` CHAR(255) NULL DEFAULT NULL COMMENT 'Optional. Type of the chat, from which the inline query was sent.',
   `created_at` timestamp NULL DEFAULT NULL COMMENT 'Entry date creation',
 
   PRIMARY KEY (`id`),
@@ -69,6 +70,7 @@ CREATE TABLE IF NOT EXISTS `chosen_inline_result` (
 
 CREATE TABLE IF NOT EXISTS `message` (
   `chat_id` bigint COMMENT 'Unique chat identifier',
+  `sender_chat_id` bigint COMMENT 'Sender of the message, sent on behalf of a chat',
   `id` bigint UNSIGNED COMMENT 'Unique message identifier',
   `user_id` bigint NULL COMMENT 'Unique user identifier',
   `date` timestamp NULL DEFAULT NULL COMMENT 'Date the message was sent in timestamp format',
@@ -81,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `message` (
   `reply_to_chat` bigint NULL DEFAULT NULL COMMENT 'Unique chat identifier',
   `reply_to_message` bigint UNSIGNED DEFAULT NULL COMMENT 'Message that this message is reply to',
   `via_bot` bigint NULL DEFAULT NULL COMMENT 'Optional. Bot through which the message was sent',
-  `edit_date` bigint UNSIGNED DEFAULT NULL COMMENT 'Date the message was last edited in Unix time',
+  `edit_date` timestamp NULL DEFAULT NULL COMMENT 'Date the message was last edited in Unix time',
   `media_group_id` TEXT COMMENT 'The unique identifier of a media message group this message belongs to',
   `author_signature` TEXT COMMENT 'Signature of the post author for messages in channels',
   `text` TEXT COMMENT 'For text messages, the actual UTF-8 text of the message max message length 4096 char utf8mb4',
@@ -110,6 +112,7 @@ CREATE TABLE IF NOT EXISTS `message` (
   `group_chat_created` tinyint(1) DEFAULT 0 COMMENT 'Informs that the group has been created',
   `supergroup_chat_created` tinyint(1) DEFAULT 0 COMMENT 'Informs that the supergroup has been created',
   `channel_chat_created` tinyint(1) DEFAULT 0 COMMENT 'Informs that the channel chat has been created',
+  `message_auto_delete_timer_changed` TEXT COMMENT 'MessageAutoDeleteTimerChanged object. Message is a service message: auto-delete timer settings changed in the chat',
   `migrate_to_chat_id` bigint NULL DEFAULT NULL COMMENT 'Migrate to chat identifier. The group has been migrated to a supergroup with the specified identifier',
   `migrate_from_chat_id` bigint NULL DEFAULT NULL COMMENT 'Migrate from chat identifier. The supergroup has been migrated from a group with the specified identifier',
   `pinned_message` TEXT NULL COMMENT 'Message object. Specified message was pinned',
@@ -117,6 +120,11 @@ CREATE TABLE IF NOT EXISTS `message` (
   `successful_payment` TEXT NULL COMMENT 'Message is a service message about a successful payment, information about the payment',
   `connected_website` TEXT NULL COMMENT 'The domain name of the website on which the user has logged in.',
   `passport_data` TEXT NULL COMMENT 'Telegram Passport data',
+  `proximity_alert_triggered` TEXT NULL COMMENT 'Service message. A user in the chat triggered another user''s proximity alert while sharing Live Location.',
+  `voice_chat_scheduled` TEXT COMMENT 'VoiceChatScheduled object. Message is a service message: voice chat scheduled',
+  `voice_chat_started` TEXT COMMENT 'VoiceChatStarted object. Message is a service message: voice chat started',
+  `voice_chat_ended` TEXT COMMENT 'VoiceChatEnded object. Message is a service message: voice chat ended',
+  `voice_chat_participants_invited` TEXT COMMENT 'VoiceChatParticipantsInvited object. Message is a service message: new participants invited to a voice chat',
   `reply_markup` TEXT NULL COMMENT 'Inline keyboard attached to the message',
 
   PRIMARY KEY (`chat_id`, `id`),
@@ -210,7 +218,7 @@ CREATE TABLE IF NOT EXISTS `pre_checkout_query` (
 
 CREATE TABLE IF NOT EXISTS `poll` (
   `id` bigint UNSIGNED COMMENT 'Unique poll identifier',
-  `question` char(255) NOT NULL COMMENT 'Poll question',
+  `question` text NOT NULL COMMENT 'Poll question',
   `options` text NOT NULL COMMENT 'List of poll options',
   `total_voter_count` int UNSIGNED COMMENT 'Total number of users that voted in the poll',
   `is_closed` tinyint(1) DEFAULT 0 COMMENT 'True, if the poll is closed',
@@ -237,6 +245,21 @@ CREATE TABLE IF NOT EXISTS `poll_answer` (
   FOREIGN KEY (`poll_id`) REFERENCES `poll` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
+CREATE TABLE IF NOT EXISTS `chat_member_updated` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT COMMENT 'Unique identifier for this entry',
+  `chat_id` BIGINT NOT NULL COMMENT 'Chat the user belongs to',
+  `user_id` BIGINT NOT NULL COMMENT 'Performer of the action, which resulted in the change',
+  `date` TIMESTAMP NOT NULL COMMENT 'Date the change was done in Unix time',
+  `old_chat_member` TEXT NOT NULL COMMENT 'Previous information about the chat member',
+  `new_chat_member` TEXT NOT NULL COMMENT 'New information about the chat member',
+  `invite_link` TEXT NULL COMMENT 'Chat invite link, which was used by the user to join the chat; for joining by invite link events only',
+  `created_at` timestamp NULL DEFAULT NULL COMMENT 'Entry date creation',
+
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`chat_id`) REFERENCES `chat` (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+
 CREATE TABLE IF NOT EXISTS `telegram_update` (
   `id` bigint UNSIGNED COMMENT 'Update''s unique identifier',
   `chat_id` bigint NULL DEFAULT NULL COMMENT 'Unique chat identifier',
@@ -251,6 +274,8 @@ CREATE TABLE IF NOT EXISTS `telegram_update` (
   `pre_checkout_query_id` bigint UNSIGNED DEFAULT NULL COMMENT 'New incoming pre-checkout query. Contains full information about checkout',
   `poll_id` bigint UNSIGNED DEFAULT NULL COMMENT 'New poll state. Bots receive only updates about polls, which are sent or stopped by the bot',
   `poll_answer_poll_id` bigint UNSIGNED DEFAULT NULL COMMENT 'A user changed their answer in a non-anonymous poll. Bots receive new votes only in polls that were sent by the bot itself.',
+  `my_chat_member_updated_id` BIGINT UNSIGNED NULL COMMENT 'The bot''s chat member status was updated in a chat. For private chats, this update is received only when the bot is blocked or unblocked by the user.',
+  `chat_member_updated_id` BIGINT UNSIGNED NULL COMMENT 'A chat member''s status was updated in a chat. The bot must be an administrator in the chat and must explicitly specify “chat_member” in the list of allowed_updates to receive these updates.',
 
   PRIMARY KEY (`id`),
   KEY `message_id` (`message_id`),
@@ -265,6 +290,8 @@ CREATE TABLE IF NOT EXISTS `telegram_update` (
   KEY `pre_checkout_query_id` (`pre_checkout_query_id`),
   KEY `poll_id` (`poll_id`),
   KEY `poll_answer_poll_id` (`poll_answer_poll_id`),
+  KEY `my_chat_member_updated_id` (`my_chat_member_updated_id`),
+  KEY `chat_member_updated_id` (`chat_member_updated_id`),
 
   FOREIGN KEY (`chat_id`, `message_id`) REFERENCES `message` (`chat_id`, `id`),
   FOREIGN KEY (`edited_message_id`) REFERENCES `edited_message` (`id`),
@@ -276,7 +303,9 @@ CREATE TABLE IF NOT EXISTS `telegram_update` (
   FOREIGN KEY (`shipping_query_id`) REFERENCES `shipping_query` (`id`),
   FOREIGN KEY (`pre_checkout_query_id`) REFERENCES `pre_checkout_query` (`id`),
   FOREIGN KEY (`poll_id`) REFERENCES `poll` (`id`),
-  FOREIGN KEY (`poll_answer_poll_id`) REFERENCES `poll_answer` (`poll_id`)
+  FOREIGN KEY (`poll_answer_poll_id`) REFERENCES `poll_answer` (`poll_id`),
+  FOREIGN KEY (`my_chat_member_updated_id`) REFERENCES `chat_member_updated` (`id`),
+  FOREIGN KEY (`chat_member_updated_id`) REFERENCES `chat_member_updated` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 CREATE TABLE IF NOT EXISTS `conversation` (

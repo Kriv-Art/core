@@ -16,50 +16,64 @@ class ChatAction
     /**
      * Typing chat action
      */
-    const TYPING = 'typing';
+    public const TYPING = 'typing';
 
     /**
      * Upload Photo chat action
      */
-    const UPLOAD_PHOTO = 'upload_photo';
+    public const UPLOAD_PHOTO = 'upload_photo';
 
     /**
      * Record Video chat action
      */
-    const RECORD_VIDEO = 'record_video';
+    public const RECORD_VIDEO = 'record_video';
 
     /**
      * Upload Video chat action
      */
-    const UPLOAD_VIDEO = 'upload_video';
+    public const UPLOAD_VIDEO = 'upload_video';
 
     /**
      * Record Audio chat action
+     *
+     * @deprecated Use ChatAction::RECORD_VOICE instead
      */
-    const RECORD_AUDIO = 'record_audio';
+    public const RECORD_AUDIO = 'record_voice';
+
+    /**
+     * Record Voice chat action
+     */
+    public const RECORD_VOICE = 'record_voice';
 
     /**
      * Upload Audio chat action
+     *
+     * @deprecated Use ChatAction::UPLOAD_VOICE instead
      */
-    const UPLOAD_AUDIO = 'upload_audio';
+    public const UPLOAD_AUDIO = 'upload_voice';
+
+    /**
+     * Upload Voice chat action
+     */
+    public const UPLOAD_VOICE = 'upload_voice';
 
     /**
      * Upload Document chat action
      */
-    const UPLOAD_DOCUMENT = 'upload_document';
+    public const UPLOAD_DOCUMENT = 'upload_document';
 
     /**
      * Find Location chat action
      */
-    const FIND_LOCATION = 'find_location';
+    public const FIND_LOCATION = 'find_location';
 
     /**
      * Record Video Note chat action
      */
-    const RECORD_VIDEO_NOTE = 'record_video_note';
+    public const RECORD_VIDEO_NOTE = 'record_video_note';
 
     /**
      * Upload Video note chat action
      */
-    const UPLOAD_VIDEO_NOTE = 'upload_video_note';
+    public const UPLOAD_VIDEO_NOTE = 'upload_video_note';
 }

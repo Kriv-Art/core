@@ -4,14 +4,93 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 Exclamation symbols (:exclamation:) note something of importance e.g. breaking changes. Click them to learn more.
 
 ## [Unreleased]
-- [:ledger: View file changes][Unreleased]
 ### Notes
+- [:ledger: View file changes][Unreleased] ∙ [:page_with_curl: DB migration script][unreleased-sql-migration]
 ### Added
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
 ### Security
+
+## [0.74.0] - 2021-06-26
+### Notes
+- [:ledger: View file changes][0.74.0]
+### Added
+- [:exclamation:][0.74.0-bc-chatmember-subentities] Bot API 5.3 (Personalized Commands, Keyboard Placeholders). (@TiiFuchs, @noplanman) (#1229, #1231)
+
+## [0.73.1] - 2021-06-20
+### Notes
+- [:ledger: View file changes][0.73.1]
+### Fixed
+- Allow new optional parameters when setting and deleting webhook. (@TiiFuchs) (#1226)
+
+## [0.73.0] - 2021-06-14
+### Notes
+- [:ledger: View file changes][0.73.0] ∙ [:page_with_curl: DB migration script][0.73.0-sql-migration]
+### Added
+- Bot API 5.2 (Payments 2.0). (#1216)
+- Possibility to connect to MySQL DB with unix socket. (@Tynik) (#1220)
+### Changed
+- `Telegram::runCommands` returns array of `ServerResponse` objects of executed commands. (#1223)
+### Fixed
+- Regex for namespace extraction from custom command classes.
+- Nested and user-triggered `Telegram::runCommands`. (#1223)
+
+## [0.72.0] - 2021-04-16
+### Notes
+- [:ledger: View file changes][0.72.0] ∙ [:page_with_curl: DB migration script][0.72.0-sql-migration]
+### Added
+- Bot API 5.1 (ChatMember Update types, Improved Invite Links, Voice Chat). (@massadm, @noplanman) (#1199)
+- Method to allow adding command classes directly. (@alligator77, @noplanman) (#1207, #1209)
+### Deprecated
+- `Telegram::handleGetUpdates` method should be passed a `$data` array for parameters. (#1202)
+### Fixed
+- `message.edit_date` is now of type `timestamp`. (#1191)
+- Allow all update types by default when using `getUpdates` method. (#1202)
+
+## [0.71.0] - 2021-03-05
+### Notes
+- [:ledger: View file changes][0.71.0]
+### Added
+- Define a custom Bot API server and file download URI. (#1168)
+### Changed
+- Improved error messages for empty input. (#1164)
+- Log update when processing it, not when fetching input. (#1164)
+### Fixed
+- `getUpdates` method wrongly sends only 1 Update when a limit of 0 is passed. (#1169)
+- `Telegram::runCommands()` now passes the correct message text to the commands. (#1181)
+- Request limiter accepts chat ID as integer and string. (#1182)
+- Calling Keyboard constructor without any parameters. (@hutattedonmyarm) (#1184)
+
+## [0.70.1] - 2020-12-25
+### Notes
+- [:ledger: View file changes][0.70.1]
+### Added
+- Extra parameter for `Request::sendMessage()` to pass options and return all response objects for split messages. (#1163)
+### Fixed
+- Ensure download and upload path variables are defined. (#1162)
+
+## [0.70.0] - 2020-12-21
+### Notes
+- [:ledger: View file changes][0.70.0] ∙ [:page_with_curl: DB migration script][0.70.0-sql-migration]
+- [:exclamation:][0.70.0-bc-minimum-php-73] PHP 7.3+ required, so make sure your code is up to date with correct types!
+### Added
+- Bot API 5.0 (Big update!). (#1147)
+### Changed
+- Upgrade code to PHP 7.3. (#1136, #1158)
+- Speed up `/clean` query. (@dva-re) (#1139)
+- Various code prettifications. (@akalongman) (#1140, #1141, #1142, #1143)
+### Security
+- Minimum PHP 7.3, allow PHP 8.0. (#1136, #1158)
+
+## [0.64.0] - 2020-10-04
+### Notes
+- [:ledger: View file changes][0.64.0]
+### Added
+- Support for Guzzle 7. (@KristobalJunta) (#1133)
+### Fixed
+- Correct SQL migration script for older versions of MySQL. (#1135)
 
 ## [0.63.1] - 2020-06-24
 ### Notes
@@ -328,7 +407,7 @@ Exclamation symbols (:exclamation:) note something of importance e.g. breaking c
 - [:ledger: View file changes][0.45.0] ∙ [:page_with_curl: DB migration script][0.45.0-sql-migration]
 ### Added
 - Documents can be sent by providing its contents via Psr7 stream (as opposed to passing a file path).
-- Allow setting a custom Guzzle HTTP Client for requests (#511).
+- Allow setting a custom Guzzle HTTP Client for requests (#511, #536).
 - First implementations towards Bots API 3.0.
 ### Changed
 - [:exclamation:][0.45.0-bc-chats-params-array] `Request::sendToActiveChats` and `DB::selectChats` now accept parameters as an options array and allow selecting of channels.
@@ -458,6 +537,12 @@ Exclamation symbols (:exclamation:) note something of importance e.g. breaking c
 ### Deprecated
 - Move `hideKeyboard` to `removeKeyboard`.
 
+[unreleased-sql-migration]: #
+[0.74.0-bc-chatmember-subentities]: https://github.com/php-telegram-bot/core/wiki/Breaking-backwards-compatibility#chatmember-subentities
+[0.73.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/master/utils/db-schema-update/0.72.0-0.73.0.sql
+[0.72.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/master/utils/db-schema-update/0.71.0-0.72.0.sql
+[0.70.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/master/utils/db-schema-update/0.64.0-0.70.0.sql
+[0.70.0-bc-minimum-php-73]: https://github.com/php-telegram-bot/core/wiki/Breaking-backwards-compatibility#minimum-php-73
 [0.63.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/master/utils/db-schema-update/0.62.0-0.63.0.sql
 [0.63.0-bc-static-method-entityescapemarkdown]: https://github.com/php-telegram-bot/core/wiki/Breaking-backwards-compatibility#static-method-entityescapemarkdown
 [0.62.0-sql-migration]: https://github.com/php-telegram-bot/core/tree/master/utils/db-schema-update/0.61.1-0.62.0.sql
@@ -488,6 +573,14 @@ Exclamation symbols (:exclamation:) note something of importance e.g. breaking c
 [Tidelift]: https://tidelift.com/subscription/pkg/packagist-longman-telegram-bot?utm_source=packagist-longman-telegram-bot&utm_medium=referral&utm_campaign=changelog
 
 [Unreleased]: https://github.com/php-telegram-bot/core/compare/master...develop
+[0.74.0]: https://github.com/php-telegram-bot/core/compare/0.73.1...0.74.0
+[0.73.1]: https://github.com/php-telegram-bot/core/compare/0.73.0...0.73.1
+[0.73.0]: https://github.com/php-telegram-bot/core/compare/0.72.0...0.73.0
+[0.72.0]: https://github.com/php-telegram-bot/core/compare/0.71.0...0.72.0
+[0.71.0]: https://github.com/php-telegram-bot/core/compare/0.70.1...0.71.0
+[0.70.1]: https://github.com/php-telegram-bot/core/compare/0.70.0...0.70.1
+[0.70.0]: https://github.com/php-telegram-bot/core/compare/0.64.0...0.70.0
+[0.64.0]: https://github.com/php-telegram-bot/core/compare/0.63.1...0.64.0
 [0.63.1]: https://github.com/php-telegram-bot/core/compare/0.63.0...0.63.1
 [0.63.0]: https://github.com/php-telegram-bot/core/compare/0.62.0...0.63.0
 [0.62.0]: https://github.com/php-telegram-bot/core/compare/0.61.1...0.62.0

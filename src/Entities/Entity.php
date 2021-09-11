@@ -11,7 +11,6 @@
 
 namespace Longman\TelegramBot\Entities;
 
-use Exception;
 use Longman\TelegramBot\Entities\InlineQuery\InlineEntity;
 use Longman\TelegramBot\Entities\InputMedia\InputMedia;
 
@@ -35,7 +34,7 @@ abstract class Entity
      * @param array  $data
      * @param string $bot_username
      */
-    public function __construct($data, $bot_username = '')
+    public function __construct(array $data, string $bot_username = '')
     {
         //Make sure we're not raw_data inception-ing
         if (array_key_exists('raw_data', $data)) {
@@ -56,7 +55,7 @@ abstract class Entity
      *
      * @return string
      */
-    public function toJson()
+    public function toJson(): string
     {
         return json_encode($this->getRawData());
     }
@@ -76,7 +75,7 @@ abstract class Entity
      *
      * @param array $data
      */
-    protected function assignMemberVariables(array $data)
+    protected function assignMemberVariables(array $data): void
     {
         foreach ($data as $key => $value) {
             $this->$key = $value;
@@ -88,7 +87,7 @@ abstract class Entity
      *
      * @return array
      */
-    protected function subEntities()
+    protected function subEntities(): array
     {
         return [];
     }
@@ -96,25 +95,21 @@ abstract class Entity
     /**
      * Perform any special entity validation
      */
-    protected function validate()
+    protected function validate(): void
     {
     }
 
     /**
      * Get a property from the current Entity
      *
-     * @param mixed $property
-     * @param mixed $default
+     * @param string $property
+     * @param mixed  $default
      *
      * @return mixed
      */
-    public function getProperty($property, $default = null)
+    public function getProperty(string $property, $default = null)
     {
-        if (isset($this->$property)) {
-            return $this->$property;
-        }
-
-        return $default;
+        return $this->$property ?? $default;
     }
 
     /**
@@ -145,7 +140,7 @@ abstract class Entity
                         return $this->makePrettyObjectArray(reset($class), $property_name);
                     }
 
-                    return new $class($property, $this->getProperty('bot_username'));
+                    return Factory::resolveEntityClass($class, $property, $this->getProperty('bot_username'));
                 }
 
                 return $property;
@@ -169,27 +164,21 @@ abstract class Entity
      * mainly for PhotoSize and Entities object arrays.
      *
      * @param string $class
-     * @param string $property
+     * @param string $property_name
      *
      * @return array
      */
-    protected function makePrettyObjectArray($class, $property)
+    protected function makePrettyObjectArray(string $class, string $property_name): array
     {
-        $new_objects = [];
+        $objects      = [];
+        $bot_username = $this->getProperty('bot_username');
 
-        try {
-            if ($objects = $this->getProperty($property)) {
-                foreach ($objects as $object) {
-                    if (!empty($object)) {
-                        $new_objects[] = new $class($object);
-                    }
-                }
-            }
-        } catch (Exception $e) {
-            $new_objects = [];
+        $properties = array_filter($this->getProperty($property_name) ?: []);
+        foreach ($properties as $property) {
+            $objects[] = Factory::resolveEntityClass($class, $property, $bot_username);
         }
 
-        return $new_objects;
+        return $objects;
     }
 
     /**
@@ -201,7 +190,7 @@ abstract class Entity
      *
      * @return string
      */
-    public static function escapeMarkdown($string)
+    public static function escapeMarkdown(string $string): string
     {
         return str_replace(
             ['[', '`', '*', '_',],
@@ -219,7 +208,7 @@ abstract class Entity
      *
      * @return string
      */
-    public static function escapeMarkdownV2($string)
+    public static function escapeMarkdownV2(string $string): string
     {
         return str_replace(
             ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'],
@@ -238,13 +227,13 @@ abstract class Entity
      *
      * @param bool $escape_markdown
      *
-     * @return string|null
+     * @return string
      */
-    public function tryMention($escape_markdown = false)
+    public function tryMention($escape_markdown = false): string
     {
-        //TryMention only makes sense for the User and Chat entity.
+        // TryMention only makes sense for the User and Chat entity.
         if (!($this instanceof User || $this instanceof Chat)) {
-            return null;
+            return '';
         }
 
         //Try with the username first...

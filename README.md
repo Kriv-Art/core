@@ -7,18 +7,18 @@
 
 A Telegram Bot based on the official [Telegram Bot API]
 
-[![API Version](https://img.shields.io/badge/Bot%20API-4.9%20%28June%202020%29-32a2da.svg)](https://core.telegram.org/bots/api#june-4-2020)
+[![API Version](https://img.shields.io/badge/Bot%20API-5.3%20%28June%202021%29-32a2da.svg)](https://core.telegram.org/bots/api#june-25-2021)
 [![Join the bot support group on Telegram](https://img.shields.io/badge/telegram-@PHP__Telegram__Bot__Support-64659d.svg)](https://telegram.me/PHP_Telegram_Bot_Support)
 [![Donate](https://img.shields.io/badge/%F0%9F%92%99-Donate%20%2F%20Support%20Us-blue.svg)](#donate)
 
-[![Build Status](https://travis-ci.org/php-telegram-bot/core.svg?branch=master)](https://travis-ci.org/php-telegram-bot/core)
+[![Build Status](https://travis-ci.com/php-telegram-bot/core.svg?branch=master)](https://travis-ci.com/github/php-telegram-bot/core)
 [![Code Coverage](https://img.shields.io/scrutinizer/coverage/g/php-telegram-bot/core/master.svg?style=flat)](https://scrutinizer-ci.com/g/php-telegram-bot/core/?b=master)
 [![Code Quality](https://img.shields.io/scrutinizer/g/php-telegram-bot/core/master.svg?style=flat)](https://scrutinizer-ci.com/g/php-telegram-bot/core/?b=master)
 [![Latest Stable Version](https://img.shields.io/packagist/v/longman/telegram-bot.svg)](https://packagist.org/packages/longman/telegram-bot)
 [![Dependencies](https://tidelift.com/badges/github/php-telegram-bot/core?style=flat)][Tidelift]
 [![Total Downloads](https://img.shields.io/packagist/dt/longman/telegram-bot.svg)](https://packagist.org/packages/longman/telegram-bot)
 [![Downloads Month](https://img.shields.io/packagist/dm/longman/telegram-bot.svg)](https://packagist.org/packages/longman/telegram-bot)
-[![Minimum PHP Version](http://img.shields.io/badge/php-%3E%3D5.6-8892BF.svg)](https://php.net/)
+[![Minimum PHP Version](http://img.shields.io/badge/php-%3E%3D7.3-8892BF.svg)](https://php.net/)
 [![License](https://img.shields.io/packagist/l/longman/telegram-bot.svg)](https://github.com/php-telegram-bot/core/LICENSE)
 
 ## Table of Contents
@@ -27,11 +27,13 @@ A Telegram Bot based on the official [Telegram Bot API]
     - [Create your first bot](#create-your-first-bot)
     - [Require this package with Composer](#require-this-package-with-composer)
     - [Choose how to retrieve Telegram updates](#choose-how-to-retrieve-telegram-updates)
+- [Using a custom Bot API server](#using-a-custom-bot-api-server)
 - [Webhook installation](#webhook-installation)
     - [Self Signed Certificate](#self-signed-certificate)
     - [Unset Webhook](#unset-webhook)
 - [getUpdates installation](#getupdates-installation)
     - [getUpdates without database](#getupdates-without-database)
+- [Filter Update](#filter-update)
 - [Support](#support)
     - [Types](#types)
     - [Inline Query](#inline-query)
@@ -42,7 +44,6 @@ A Telegram Bot based on the official [Telegram Bot API]
     - [getUserProfilePhoto](#getuserprofilephoto)
     - [getFile and downloadFile](#getfile-and-downloadfile)
     - [Send message to all active chats](#send-message-to-all-active-chats)
-    - [Filter Update](#filter-update)
 - [Utils](#utils)
     - [MySQL storage (Recommended)](#mysql-storage-recommended)
         - [External Database connection](#external-database-connection)
@@ -77,7 +78,7 @@ This Bot aims to provide a platform where one can simply write a bot and have in
 
 The Bot can:
 - Retrieve updates with [webhook](#webhook-installation) and [getUpdates](#getupdates-installation) methods.
-- Supports all types and methods according to Telegram Bot API 4.9 (June 2020).
+- Supports all types and methods according to Telegram Bot API 5.3 (June 2021).
 - Supports supergroups.
 - Handle commands in chat with other bots.
 - Manage Channel from the bot admin interface.
@@ -175,7 +176,7 @@ Create *composer.json* file
     "name": "yourproject/yourproject",
     "type": "project",
     "require": {
-        "php": ">=5.5",
+        "php": ">=7.3",
         "longman/telegram-bot": "*"
     }
 }
@@ -200,6 +201,23 @@ The bot can handle updates with [**Webhook**](#webhook-installation) or [**getUp
 | Host with https | Required | Not required |
 | MySQL | Not required | ([Not](#getupdates-without-database)) Required  |
 
+## Using a custom Bot API server
+
+**For advanced users only!**
+
+As from Telegram Bot API 5.0, users can [run their own Bot API server] to handle updates.
+This means, that the PHP Telegram Bot needs to be configured to serve that custom URI.
+Additionally, you can define the URI where uploaded files to the bot can be downloaded (note the `{API_KEY}` placeholder).
+
+```php
+Longman\TelegramBot\Request::setCustomBotApiUri(
+    $api_base_uri          = 'https://your-bot-api-server', // Default: https://api.telegram.org
+    $api_base_download_uri = '/path/to/files/{API_KEY}'     // Default: /file/bot{API_KEY}
+);
+```
+
+**Note:** If you are running your bot in `--local` mode, you won't need the `Request::downloadFile()` method, since you can then access your files directly from the absolute path returned by `Request::getFile()`.
+
 ## Webhook installation
 
 Note: For a more detailed explanation, head over to the [example-bot repository] and follow the instructions there.
@@ -207,7 +225,7 @@ Note: For a more detailed explanation, head over to the [example-bot repository]
 In order to set a [Webhook][api-setwebhook] you need a server with HTTPS and composer support.
 (For a [self signed certificate](#self-signed-certificate) you need to add some extra code)
 
-Create [*set.php*][set.php] with the following contents:
+Create *[set.php]* with the following contents:
 ```php
 <?php
 // Load composer
@@ -235,7 +253,7 @@ try {
 Open your *set.php* via the browser to register the webhook with Telegram.
 You should see `Webhook was set`.
 
-Now, create [*hook.php*][hook.php] with the following contents:
+Now, create *[hook.php]* with the following contents:
 ```php
 <?php
 // Load composer
@@ -259,20 +277,20 @@ try {
 
 ### Self Signed Certificate
 
-To upload the certificate, add the certificate path as a parameter in *set.php*:
+Upload the certificate and add the path as a parameter in *set.php*:
 ```php
 $result = $telegram->setWebhook($hook_url, ['certificate' => '/path/to/certificate']);
 ```
 
 ### Unset Webhook
 
-Edit [*unset.php*][unset.php] with your bot credentials and execute it.
+Edit *[unset.php]* with your bot credentials and execute it.
 
 ## getUpdates installation
 
 For best performance, the MySQL database should be enabled for the `getUpdates` method!
 
-Create [*getUpdatesCLI.php*][getUpdatesCLI.php] with the following contents:
+Create *[getUpdatesCLI.php]* with the following contents:
 ```php
 #!/usr/bin/env php
 <?php
@@ -321,19 +339,65 @@ If you choose to / or are obliged to use the `getUpdates` method without a datab
 $telegram->useGetUpdatesWithoutDatabase();
 ```
 
+## Filter Update
+
+:exclamation: Note that by default, Telegram will send any new update types that may be added in the future. This may cause commands that don't take this into account to break!
+
+It is suggested that you specifically define which update types your bot can receive and handle correctly.
+
+You can define which update types are sent to your bot by defining them when setting the [webhook](#webhook-installation) or passing an array of allowed types when using [getUpdates](#getupdates-installation).
+
+```php
+use Longman\TelegramBot\Entities\Update;
+
+// For all update types currently implemented in this library:
+// $allowed_updates = Update::getUpdateTypes();
+
+// Define the list of allowed Update types manually:
+$allowed_updates = [
+    Update::TYPE_MESSAGE,
+    Update::TYPE_CHANNEL_POST,
+    // etc.
+];
+
+// When setting the webhook.
+$telegram->setWebhook($hook_url, ['allowed_updates' => $allowed_updates]);
+
+// When handling the getUpdates method.
+$telegram->handleGetUpdates(['allowed_updates' => $allowed_updates]);
+```
+
+Alternatively, Update processing can be allowed or denied by defining a custom update filter.
+
+Let's say we only want to allow messages from a user with ID `428`, we can do the following before handling the request:
+
+```php
+$telegram->setUpdateFilter(function (Update $update, Telegram $telegram, &$reason = 'Update denied by update_filter') {
+    $user_id = $update->getMessage()->getFrom()->getId();
+    if ($user_id === 428) {
+        return true;
+    }
+
+    $reason = "Invalid user with ID {$user_id}";
+    return false;
+});
+```
+
+The reason for denying an update can be defined with the `$reason` parameter. This text gets written to the debug log.
+
 ## Support
 
 ### Types
 
-All types are implemented according to Telegram API (20 January 2016).
+All types are implemented according to Telegram API 5.3 (June 2021).
 
 ### Inline Query
 
-Full support for inline query according to Telegram API (20 January 2016).
+Full support for inline query according to Telegram API 5.3 (June 2021).
 
 ### Methods
 
-All methods are implemented according to Telegram API (20 January 2016).
+All methods are implemented according to Telegram API 5.3 (June 2021).
 
 #### Send Message
 
@@ -376,7 +440,7 @@ $result = Request::sendPhoto([
 ```
 
 *sendAudio*, *sendDocument*, *sendAnimation*, *sendSticker*, *sendVideo*, *sendVoice* and *sendVideoNote* all work in the same way, just check the [API documentation](https://core.telegram.org/bots/api#sendphoto) for the exact usage.
-See the [*ImageCommand.php*][ImageCommand.php] for a full example.
+See the *[ImageCommand.php]* for a full example.
 
 #### Send Chat Action
 
@@ -389,11 +453,11 @@ Request::sendChatAction([
 
 #### getUserProfilePhoto
 
-Retrieve the user photo, see [*WhoamiCommand.php*][WhoamiCommand.php] for a full example.
+Retrieve the user photo. (see *[WhoamiCommand.php]* for a full example)
 
 #### getFile and downloadFile
 
-Get the file path and download it, see [*WhoamiCommand.php*][WhoamiCommand.php] for a full example.
+Get the file path and download it. (see *[WhoamiCommand.php]* for a full example)
 
 #### Send message to all active chats
 
@@ -415,30 +479,11 @@ $results = Request::sendToActiveChats(
 
 You can also broadcast a message to users, from the private chat with your bot. Take a look at the [admin commands](#admin-commands) below.
 
-#### Filter Update
-
-Update processing can be allowed or denied by defining a custom update filter.
-Let's say we only want to allow messages from a user with ID 428, we can do the following before handling the request:
-
-```php
-$telegram->setUpdateFilter(function (Update $update, Telegram $telegram, &$reason = 'Update denied by update_filter') {
-    $user_id = $update->getMessage()->getFrom()->getId();
-    if ($user_id === 428) {
-        return true;
-    }
-
-    $reason = "Invalid user with ID {$user_id}";
-    return false;
-});
-```
-
-The reason for denying an update can be defined with the `$reason` parameter. This text gets written to the debug log.
-
 ## Utils
 
 ### MySQL storage (Recommended)
 
-If you want to save messages/users/chats for further usage in commands, create a new database (`utf8mb4_unicode_520_ci`), import *structure.sql* and enable MySQL support after object creation and BEFORE `handle()` method:
+If you want to save messages/users/chats for further usage in commands, create a new database (`utf8mb4_unicode_520_ci`), import *[structure.sql]* and enable MySQL support BEFORE `handle()` method:
 
 ```php
 $mysql_credentials = [
@@ -466,7 +511,7 @@ It is possible to provide the library with an external MySQL PDO connection.
 Here's how to configure it:
 
 ```php
-$telegram->enableExternalMySql($external_pdo_connection)
+$telegram->enableExternalMySql($external_pdo_connection);
 //$telegram->enableExternalMySql($external_pdo_connection, $table_prefix)
 ```
 ### Channels Support
@@ -480,27 +525,7 @@ With [admin commands](#admin-commands) you can manage your channels directly wit
 
 The bot is able to recognise commands in a chat with multiple bots (/command@mybot).
 
-It can execute commands that get triggered by chat events.
-
-Here's the list:
-
-- *StartCommand.php* (A new user starts to use the bot.)
-- *NewChatMembersCommand.php* (A new member(s) was added to the group, information about them.)
-- *LeftChatMemberCommand.php* (A member was removed from the group, information about them.)
-- *NewChatTitleCommand.php* (A chat title was changed to this value.)
-- *NewChatPhotoCommand.php* (A chat photo was changed to this value.)
-- *DeleteChatPhotoCommand.php* (Service message: the chat photo was deleted.)
-- *GroupChatCreatedCommand.php* (Service message: the group has been created.)
-- *SupergroupChatCreatedCommand.php* (Service message: the supergroup has been created.)
-- *ChannelChatCreatedCommand.php* (Service message: the channel has been created.)
-- *MigrateToChatIdCommand.php* (The group has been migrated to a supergroup with the specified identifier.)
-- *MigrateFromChatIdCommand.php* (The supergroup has been migrated from a group with the specified identifier.)
-- *PinnedMessageCommand.php* (Specified message was pinned.)
-
-- *GenericmessageCommand.php* (Handle any type of message.)
-- *GenericCommand.php* (Handle commands that don't exist or to use commands as a variable.)
-    - Favourite colour? */black, /red*
-    - Favourite number? */1, /134*
+It can also execute commands that get triggered by events, so-called Service Messages.
 
 ### Custom Commands
 
@@ -508,6 +533,18 @@ Maybe you would like to develop your own commands.
 There is a guide to help you [create your own commands][wiki-create-your-own-commands].
 
 Also, be sure to have a look at the [example commands][ExampleCommands-folder] to learn more about custom commands and how they work.
+
+You can add your custom commands in different ways:
+
+```php
+// Add a folder that contains command files
+$telegram->addCommandsPath('/path/to/command/files');
+//$telegram->addCommandsPaths(['/path/to/command/files', '/another/path']);
+
+// Add a command directly using the class name
+$telegram->addCommandClass(MyCommand::class);
+//$telegram->addCommandClasses([MyCommand::class, MyOtherCommand::class]);
+```
 
 ### Commands Configuration
 
@@ -535,7 +572,7 @@ Enabling this feature, the bot admin can perform some super user commands like:
 - Post any content to your channels */sendtochannel*
 - Inspect a user or a chat with */whois*
 
-Take a look at all default admin commands stored in the [*src/Commands/AdminCommands/*][AdminCommands-folder] folder.
+Take a look at all default admin commands stored in the *[src/Commands/AdminCommands/][AdminCommands-folder]* folder.
 
 #### Set Admins
 
@@ -551,14 +588,14 @@ $telegram->enableAdmins([
     other_telegram_user_id,
 ]);
 ```
-Telegram user id can be retrieved with the [*/whoami*][WhoamiCommand.php] command.
+Telegram user id can be retrieved with the *[/whoami][WhoamiCommand.php]* command.
 
 #### Channel Administration
 
 To enable this feature follow these steps:
 - Add your bot as channel administrator, this can be done with any Telegram client.
 - Enable admin interface for your user as explained in the admin section above.
-- Enter your channel name as a parameter for the [*/sendtochannel*][SendtochannelCommand.php] command:
+- Enter your channel name as a parameter for the *[/sendtochannel][SendtochannelCommand.php]* command:
 ```php
 $telegram->setCommandConfig('sendtochannel', [
     'your_channel' => [
@@ -656,6 +693,7 @@ Credit list in [CREDITS](CREDITS)
 
 [Telegram Bot API]: https://core.telegram.org/bots/api "Telegram Bot API"
 [Composer]: https://getcomposer.org/ "Composer"
+[run their own Bot API server]: https://core.telegram.org/bots/api#using-a-local-bot-api-server "Using a Local Bot API Server"
 [example-bot repository]: https://github.com/php-telegram-bot/example-bot "Example Bot repository"
 [api-setwebhook]: https://core.telegram.org/bots/api#setwebhook "Webhook on Telegram Bot API"
 [set.php]: https://github.com/php-telegram-bot/example-bot/blob/master/set.php "example set.php"
@@ -668,7 +706,8 @@ Credit list in [CREDITS](CREDITS)
 [WhoamiCommand.php]: https://github.com/php-telegram-bot/example-bot/blob/master/Commands/WhoamiCommand.php "example /whoami command"
 [HelpCommand.php]: https://github.com/php-telegram-bot/example-bot/blob/master/Commands/HelpCommand.php "example /help command"
 [SendtochannelCommand.php]: https://github.com/php-telegram-bot/core/blob/master/src/Commands/AdminCommands/SendtochannelCommand.php "/sendtochannel admin command"
-[DB::selectChats]: https://github.com/php-telegram-bot/core/blob/0.46.0/src/DB.php#L1000 "DB::selectChats() parameters"
+[DB::selectChats]: https://github.com/php-telegram-bot/core/blob/0.70.0/src/DB.php#L1148 "DB::selectChats() parameters"
+[structure.sql]: https://github.com/php-telegram-bot/core/blob/master/structure.sql "DB structure for importing"
 [Wiki]: https://github.com/php-telegram-bot/core/wiki "PHP Telegram Bot Wiki"
 [wiki-create-your-own-commands]: https://github.com/php-telegram-bot/core/wiki/Create-your-own-commands "Create your own commands"
 [issues]: https://github.com/php-telegram-bot/core/issues "PHP Telegram Bot Issues"
